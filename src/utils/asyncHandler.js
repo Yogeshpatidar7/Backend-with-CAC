@@ -1,23 +1,16 @@
+//helper function for handling error througout the whole
+//project we dont need to write tryCatch block in every route of anywhere 
+//just use asynchandler as a middleware
 
-//higher order fn
-const asyncHandler = (fn) => async (req, res, next) =>  {
+const asyncHandler = (fn) => async (req, res, next) => {
     try {
-        await fn(req, res, next)
+        await fn(req, res, next);
     } catch (error) {
-        res.status(err.code || 500).json({
+        res.status(error.code || 500).json({
             success: false,
-            message: err.message
-        })
+            message: error.message
+        });
     }
-}
+};
 
-
-export {asyncHandler};
-
-// const asyncHandler = (requestHandler) =>  {
-//     (req, res, next) => {
-//         Promise
-//         .resolve(requestHandler(req, res, next))
-//         .catch((err) => next(err))
-//  }
-// }
+export { asyncHandler };
