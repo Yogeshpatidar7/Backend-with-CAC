@@ -5,33 +5,27 @@ import {uploadOnCloudinary} from "../utils/cloudinary.js";
 import { ApiResponse } from '../utils/ApiResponse.js';
 
 const registerUser =  asyncHandler(async (req, res) => {
-    //user detail from frontend
-    //validation 
-    //check user already exisit
-    //check for images, avatar
-    //upload to cloudinary, avatar
-    //create user object - create entry in db
-    //resmove pswd and refress token field from response
-    //check for user creation
-    //return res
 
     const {fullName, email, username, password} = req.body;
-    console.log("email: ", email);
+    //console.log("email: ", email);
 
+    //validate required fields
     if([fullName, email, password, username].some((field) => {
         field?.trim() === ""
     })){
         throw new ApiError(400, "All fields are required");
     }
 
-    const existedUser = User.findOne({
+    //check if user already exists
+    const existedUser = await  User.findOne({
         $or: [{ username }, { email }]
     })
 
     if(existedUser) {
-        throw new ApiError(409, "User woth email or username already exist");
+        throw new ApiError(409, "User with email or username already exist");
     }
 
+    //handle file uploads
     const avatarLocalPath = req.files?.avatar[0]?.path;
     const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
@@ -39,6 +33,7 @@ const registerUser =  asyncHandler(async (req, res) => {
         throw new ApiError(400, "Avatar file is required");
     }
 
+    //upload images on cloudinary
     const avatar = await uploadOnCloudinary(avatarLocalPath);
     const coverImage = await uploadOnCloudinary(coverImageLocalPath); 
 
@@ -46,6 +41,7 @@ const registerUser =  asyncHandler(async (req, res) => {
         throw new ApiError(400, "Avatar file is required");
     }
 
+    //create new user
     const user = await User.create({
         fullName,
         avatar: avatar.url,
@@ -55,6 +51,7 @@ const registerUser =  asyncHandler(async (req, res) => {
         username : username.toLowerCase()
     })
 
+     // Fetch the created user without password and refresh token fields
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
